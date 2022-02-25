@@ -2,58 +2,65 @@ import "./App.css";
 import { useState, useEffect } from "react";
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 import Loader from "react-loader-spinner";
-
+import Navbar from "./components/Navbar";
 import NoMatch from "./NoMatch";
 import ErrorMsg from "./ErrorMsg";
-import Article from "./Article";
-const FETCH_ENDPOINT_URL = process.env.REACT_APP_HN_ENDPOINT;
+import Article from "./components/Article";
+import PaginationButtons from "./components/PaginationButtons";
 
 const App = () => {
+  const baseUrl = "https://hn.algolia.com/api/v1/search_by_date";
   const [articles, setArticles] = useState();
   const [query, setQuery] = useState("");
   const [isFetching, setIsFetching] = useState(false);
   const [isError, setIsError] = useState(false);
-  const [page, setPage] = useState(0);
+  const [pageNr, setPageNr] = useState(0);
 
   useEffect(() => {
     const getNews = () => {
-      setIsError(false);
-
       // run spinner on load
       setIsFetching(true);
-      // Fetch data with params, query param only added if searched for something
+
+      // Fetch data from API
       fetch(
-        `${FETCH_ENDPOINT_URL}?${
-          query && `query=${query}&`
-        }tags=story&hitsPerPage=20&restrictSearchableAttributes=title&page=${page}`
+        `${baseUrl}?tags=story&restrictSearchableAttributes=title&numericFilters=num_comments>0&query=${query}&page=${pageNr}`
       )
         .then(
           (res) => {
-            if (res.ok) return res.json();
-            throw new Error("Network error");
+            /*the res.ok property catches all the HTTP error codes outside the range 200..300
+            so it is needed with fetch to catch non-network errors*/
+            if (!res.ok)
+              throw new Error(`Error with status code ${res.status}`);
+            return res.json();
           },
+          // if we want to catch a network error we pass a second callback to the then chaining
           (networkError) => {
             setIsFetching(false);
             setIsError(true);
-            console.log(networkError.message);
+            //we throw a custom error to the catch block
+            throw new Error(`Network Error ${networkError.message}`);
           }
         )
         .then((data) => {
           setIsFetching(false);
           // set the state with new fetched data and articles
-          setArticles({ data: data, hits: data.hits });
+          setArticles(data);
         })
         .catch((e) => {
           setIsFetching(false);
           setIsError(true);
-          console.log(e.message);
+          //catch the error from the callback
+          console.log(e);
         });
     };
+
     getNews();
     // refresh fetch every 5 minutes
     const id = setInterval(() => getNews(), 300000);
+
+    // clear the interval when the component is unmounted
     return () => clearInterval(id);
-  }, [query, page]);
+  }, [query, pageNr]);
 
   // handle search submit
   const handleSubmit = (e) => {
@@ -61,99 +68,54 @@ const App = () => {
 
     setQuery(e.target.query.value);
 
-    setPage(0);
+    setPageNr(0);
     e.target.query.value = "";
   };
-
-  // highlight query using regular expression
-  const highlightQuery = (title) => {
-    const regexp = new RegExp(query, "gi");
-    const replacementPattern = "<mark>$&</mark>";
-    const highlightedQuery = title.replaceAll(regexp, replacementPattern);
-    console.log(highlightQuery);
-    return { __html: highlightedQuery };
-  };
-
+  console.log(articles);
   const displayArticles = () => {
-    // map through fetched articles and display them as component
-    if (articles && articles.hits.length) {
+    if (articles && articles.hits.length > 0) {
+      const { hitsPerPage, hits, page } = articles;
       return (
         <>
           <div className="d-flex flex-column ">
             {/* calculate list numeration */}
-            <ol start={articles.data.hitsPerPage * articles.data.page + 1}>
-              {articles.hits
+            <ol
+              start={`${
+                page === 0 ? hitsPerPage * page + 1 : hitsPerPage * page
+              }`}
+            >
+              {hits
                 .filter((article) =>
                   query ? article.title.match(new RegExp(query, "gi")) : article
                 )
-
                 .map((article) => (
-                  <li key={article.objectID} className="my-1">
-                    <Article
-                      {...article}
-                      query={query}
-                      highlightQuery={highlightQuery}
-                    />
+                  <li key={crypto.randomUUID()} className="my-1">
+                    <Article {...article} query={query} />
                   </li>
                 ))}
             </ol>
             {/* go to previos page */}
-          </div>
-          <div className="d-flex justify-content-around pb-4">
-            <button
-              className="btn btn-outline-info"
-              onClick={() => {
-                if (page > 0) {
-                  setPage(page - 1);
-                }
-              }}
-            >
-              Prev Page
-            </button>
-            {/* go to next page */}
-            <button
-              className="btn btn-outline-warning"
-              onClick={() => {
-                setPage(page + 1);
-              }}
-            >
-              Next Page
-            </button>
+            <PaginationButtons setPageNr={setPageNr} pageNr={pageNr} />
           </div>
           <footer className="text-center m-5 fs-6">created by claurennt</footer>
         </>
       );
     }
-
-    // handle case when query search does not return any matches
-    if (query && !articles.hits.length) {
-      return <NoMatch />;
-    }
   };
 
   return (
     <>
-      <nav className="navbar d-flex justify-content-around d-flex align-items-center py-3 mb-4">
-        <a href="/" className=" pageTitle display-4">
-          Hacker News Clone
-        </a>
+      <Navbar handleSubmit={handleSubmit} />
+      {query && !articles?.hits?.length > 0 && <NoMatch />}
 
-        <form className="form-inline align-self-end" onSubmit={handleSubmit}>
-          <input
-            type="text"
-            name="query"
-            placeholder="Search word"
-            className="fs-6"
-          />
-        </form>
-      </nav>
-      {query && (
+      {/* if there is a match when searchign for a term display small info about queried word*/}
+      {query && articles?.hits?.length > 0 && (
         <p className="fs-4 text-center">Articles matching word: {query}</p>
       )}
       <div className="container container-fluid">
         {isError && <ErrorMsg />}
 
-        {isFetching && (
+        {isFetching ? (
           <Loader
             visible={isFetching}
             type="ThreeDots"
@@ -161,8 +123,9 @@ const App = () => {
             height={80}
             width={80}
           />
+        ) : (
+          displayArticles()
         )}
-        {displayArticles()}
       </div>
     </>
   );

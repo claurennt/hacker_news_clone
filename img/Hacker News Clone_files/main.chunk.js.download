@@ -184,7 +184,7 @@ const App = () => {
   const [query, setQuery] = Object(react__WEBPACK_IMPORTED_MODULE_1__["useState"])("");
   const [isFetching, setIsFetching] = Object(react__WEBPACK_IMPORTED_MODULE_1__["useState"])(false);
   const [isError, setIsError] = Object(react__WEBPACK_IMPORTED_MODULE_1__["useState"])(false);
-  const [pageHits, setPageHits] = Object(react__WEBPACK_IMPORTED_MODULE_1__["useState"])(50);
+  const [pageHits, setPageNrHits] = Object(react__WEBPACK_IMPORTED_MODULE_1__["useState"])(50);
   Object(react__WEBPACK_IMPORTED_MODULE_1__["useEffect"])(() => {
     const getNews = () => {
       setIsError(false);
@@ -218,7 +218,7 @@ const App = () => {
   };
 
   const handleOnClick = e => {
-    setPageHits(prevPageHits => prevPageHits + 20);
+    setPageNrHits(prevPageHits => prevPageHits + 20);
     console.log(pageHits);
   };
 
