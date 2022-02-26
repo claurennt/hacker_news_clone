@@ -1,15 +1,23 @@
 import React, { useEffect, useState } from "react";
+
 import calculateTimeAgo from "../utils/calculateTimeAgo";
+import displayNumberOfComments from "../utils/displayNumberOfComments";
+
+import ArticleDetailed from "./ArticleDetailed";
+import ArticleShortInfo from "./ArticleShortInfo";
+
 export default function Article({
-  title,
   url,
-  query,
   objectID,
-  author,
   created_at,
+  num_comments,
+  detailedView,
+  setDetailedView,
+  handleClickedArticle,
+  ...rest
 }) {
-  const [, /*comments*/ setComments] = useState();
-  const [toggleComments, setToggleComments] = useState(false);
+  const [comments, setComments] = useState();
+  console.log(rest);
   useEffect(() => {
     // Fetch the comments for each article
     fetch(`http://hn.algolia.com/api/v1/items/${objectID}`)
@@ -23,7 +31,7 @@ export default function Article({
           throw new Error(`Network Error ${networkError.message}`);
         }
       )
-      .then((children) => {
+      .then(({ children }) => {
         setComments(children);
       })
       .catch((e) => {
@@ -35,85 +43,24 @@ export default function Article({
     url = new URL(url);
   }
 
-  // highlight query using regular expression
-  const highlightQuery = (title) => {
-    const regexp = new RegExp(query, "gi");
-    const replacementPattern = "<mark>$&</mark>";
-    const highlightedQuery = title.replaceAll(regexp, replacementPattern);
-
-    return { __html: highlightedQuery };
-  };
-
   const timeAgo = calculateTimeAgo(created_at);
+  const numberOfComments = displayNumberOfComments(num_comments);
 
   return (
-    <div>
-      <div className="d-flex flex-row">
-        <a
-          className="text-decoration-none link-dark fs-5"
-          href={url && url.href}
-          rel="noreferrer"
-          target="_blank"
-          dangerouslySetInnerHTML={
-            query ? highlightQuery(title) : { __html: title }
-          }
-        ></a>
-        <a
-          href={url && url.origin}
-          target="_blank"
-          rel="noreferrer"
-          className="text-decoration-none link-secondary bg-light fw-light ms-3 p-1"
-        >
-          {url ? url.origin : ""}
-        </a>
-      </div>
-      <div className="d-flex flex-row ">
-        <button
-          style={{
-            textDecoration: "none",
-            padding: "0px",
-            margin: "0px 3px",
-            border: "none",
-            outline: "none",
-            backgroundColor: "transparent",
-            fontSize: "14px",
-            cursor: "default",
-          }}
-        >
-          by {author}
-        </button>
-        |
-        <button
-          style={{
-            textDecoration: "none",
-            padding: "0px",
-            margin: "0px 3px",
-            border: "none",
-            outline: "none",
-            backgroundColor: "transparent",
-            fontSize: "14px",
-            cursor: "default",
-          }}
-        >
-          {timeAgo}
-        </button>
-        |
-        <button
-          style={{
-            textDecoration: "underline",
-            padding: "0px",
-            margin: "0px 3px",
-            border: "none",
-            outline: "none",
-            backgroundColor: "transparent",
-            fontSize: "14px",
-          }}
-          onClick={() => setToggleComments(!toggleComments)}
-        >
-          comments
-        </button>
-      </div>
-      {toggleComments && <div>cc</div>}
-    </div>
+    <>
+      {
+        <ArticleShortInfo
+          handleClickedArticle={handleClickedArticle}
+          setIsClicked={setDetailedView}
+          setDetailedView={setDetailedView}
+          timeAgo={timeAgo}
+          url={url}
+          numberOfComments={numberOfComments}
+          objectID={objectID}
+          {...rest}
+        />
+      }{" "}
+      {detailedView && <ArticleDetailed comments={comments} {...rest} />}
+    </>
   );
 }

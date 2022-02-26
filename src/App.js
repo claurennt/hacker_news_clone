@@ -15,6 +15,8 @@ const App = () => {
   const [isFetching, setIsFetching] = useState(false);
   const [isError, setIsError] = useState(false);
   const [pageNr, setPageNr] = useState(0);
+  const [isClicked, setIsClicked] = useState(false);
+  const [detailedView, setDetailedView] = useState();
 
   useEffect(() => {
     const getNews = () => {
@@ -71,7 +73,15 @@ const App = () => {
     setPageNr(0);
     e.target.query.value = "";
   };
-  console.log(articles);
+
+  const handleClickedArticle = (clickedId) => {
+    console.log(articles);
+    const clickedArticle = articles.hits.find(
+      (article) => article.objectID === clickedId
+    );
+    setDetailedView(clickedArticle);
+  };
+
   const displayArticles = () => {
     if (articles && articles.hits.length > 0) {
       const { hitsPerPage, hits, page } = articles;
@@ -88,9 +98,21 @@ const App = () => {
                 .filter((article) =>
                   query ? article.title.match(new RegExp(query, "gi")) : article
                 )
+                .filter((article) =>
+                  detailedView
+                    ? article.objectID === detailedView.objectID
+                    : article
+                )
                 .map((article) => (
                   <li key={crypto.randomUUID()} className="my-1">
-                    <Article {...article} query={query} />
+                    <Article
+                      {...article}
+                      setIsClicked={setIsClicked}
+                      query={query}
+                      detailedView={detailedView}
+                      handleClickedArticle={handleClickedArticle}
+                      setDetailedView={setDetailedView}
+                    />
                   </li>
                 ))}
             </ol>
