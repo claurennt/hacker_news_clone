@@ -3,10 +3,10 @@ import parse from "html-react-parser";
 
 import calculateTimeAgo from "../utils/calculateTimeAgo";
 
-const Comment = ({ created_at, author, text, children, nested = 0 }, ref) => {
+const Comment = ({ created_at, author, text, children, nested = 0 }) => {
   const timeAgo = calculateTimeAgo(created_at);
 
-  const parent = useRef(ref);
+  const parent = useRef(null);
 
   const navigateToParentComment = () => {
     window.scrollTo({
