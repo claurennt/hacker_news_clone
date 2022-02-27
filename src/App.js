@@ -19,14 +19,18 @@ const App = () => {
 
   const baseUrl = "https://hn.algolia.com/api/v1/search_by_date";
 
+  // https://medium.com/doctolib/react-stop-checking-if-your-component-is-mounted-3bb2568a4934
   useEffect(() => {
+    // use abortController to cancel the fetch request if the component is unmounted
+    const abortController = new AbortController(); // Create a new abort controller
     const getNews = () => {
       // run spinner on load
       setIsFetching(true);
 
       // Fetch data from API
       fetch(
-        `${baseUrl}?tags=story&restrictSearchableAttributes=title&numericFilters=num_comments>0&query=${query}&page=${pageNr}`
+        `${baseUrl}?tags=story&restrictSearchableAttributes=title&numericFilters=num_comments>0&query=${query}&page=${pageNr}`,
+        { signal: abortController.signal }
       )
         .then(
           (res) => {
@@ -50,16 +54,20 @@ const App = () => {
           setArticles(data);
         })
         .catch((e) => {
+          console.log(e.name);
+          //return if the error is coming from the abort controller interface
+          if (e.name === "AbortError") return;
           setIsFetching(false);
           setIsError(true);
           //catch the error from the callback
           console.log(e);
         });
+      return () => abortController.abort();
     };
 
     getNews();
     // refresh fetch every 5 minutes
-    const id = setInterval(() => getNews(), 300000);
+    const id = setInterval(() => getNews(), 20000);
 
     // clear the interval when the component is unmounted
     return () => clearInterval(id);
@@ -108,7 +116,7 @@ const App = () => {
                   query ? article.title.match(new RegExp(query, "gi")) : article
                 )
                 .filter((article) =>
-                  //display articles's detailed view if user clicks on "comments" button
+                  //display detailed view of article that has been clicked on, (click on comment button or article title)
                   detailedView
                     ? article.objectID === detailedView.objectID
                     : article
