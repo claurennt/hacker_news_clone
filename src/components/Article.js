@@ -20,31 +20,39 @@ export default function Article({
   const [comments, setComments] = useState();
 
   useEffect(() => {
-    // Fetch the comments for each article
-    fetch(`http://hn.algolia.com/api/v1/items/${objectID}`)
-      .then(
-        (res) => {
-          if (!res.ok) throw new Error(`Error with status code ${res.status}`);
-          return res.json();
-        },
+    //use abort controller interface to cancel the fetch request
+    const abortController = new AbortController();
 
-        (networkError) => {
-          throw new Error(`Network Error ${networkError.message}`);
-        }
-      )
+    // Fetch the comments for each article
+    fetch(`http://hn.algolia.com/api/v1/items/${objectID}`, {
+      signal: abortController.signal,
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`Error with status code ${res.status}`);
+        return res.json();
+      })
       .then(({ children }) => {
         setComments(children);
       })
       .catch((e) => {
+        //return if the error is coming from the abort controller interface
+        if (e.name === "AbortError") return;
         console.log(e);
       });
+
+    //cancel the fetch request when the component is unmounted
+    return () => abortController.abort();
   }, [objectID]);
 
+  // create a url object with the url prop
   if (url) {
     url = new URL(url);
   }
 
+  //get time when article was posted
   const timeAgo = calculateTimeAgo(created_at);
+
+  //display string with number of comments
   const numberOfComments = displayNumberOfComments(num_comments);
 
   return (
