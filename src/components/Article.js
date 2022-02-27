@@ -14,10 +14,11 @@ export default function Article({
   detailedView,
   setDetailedView,
   handleClickedArticle,
+  isLoadingComments,
   ...rest
 }) {
   const [comments, setComments] = useState();
-  console.log(rest);
+
   useEffect(() => {
     // Fetch the comments for each article
     fetch(`http://hn.algolia.com/api/v1/items/${objectID}`)
@@ -51,7 +52,6 @@ export default function Article({
       {
         <ArticleShortInfo
           handleClickedArticle={handleClickedArticle}
-          setIsClicked={setDetailedView}
           setDetailedView={setDetailedView}
           timeAgo={timeAgo}
           url={url}
@@ -60,7 +60,12 @@ export default function Article({
           {...rest}
         />
       }{" "}
-      {detailedView && <ArticleDetailed comments={comments} {...rest} />}
+      {detailedView && (
+        <ArticleDetailed
+          comments={comments}
+          isLoadingComments={isLoadingComments}
+        />
+      )}
     </>
   );
 }

@@ -1,4 +1,12 @@
-import { useRef, useState } from "react";
+const style = {
+  textDecoration: "none",
+  padding: "0px",
+  margin: "0px 3px",
+  border: "none",
+  outline: "none",
+  backgroundColor: "transparent",
+  fontSize: "14px",
+};
 
 const ArticleShortInfo = ({
   points,
@@ -8,14 +16,9 @@ const ArticleShortInfo = ({
   query,
   url,
   numberOfComments,
-  setDetailedView,
   handleClickedArticle,
   objectID,
-  setIsClicked,
 }) => {
-  const myArticle = useRef(null);
-  const [isShown, setIsShown] = useState(true);
-
   // highlight query using regular expression
   const highlightQuery = (title) => {
     const regexp = new RegExp(query, "gi");
@@ -27,13 +30,18 @@ const ArticleShortInfo = ({
 
   return (
     <>
-      <div ref={myArticle}>
+      <div>
         <div className="d-flex flex-row">
           <a
             className="text-decoration-none link-dark fs-5"
+            style={{ cursor: "pointer" }}
             href={url && url.href}
             rel="noreferrer"
             target="_blank"
+            onClick={() => {
+              //show detailed view if article does not have a url
+              if (!url) handleClickedArticle(objectID);
+            }}
             dangerouslySetInnerHTML={
               query ? highlightQuery(title) : { __html: title }
             }
@@ -48,31 +56,12 @@ const ArticleShortInfo = ({
           </a>
         </div>
         <div className="d-flex flex-row ">
-          <button
-            style={{
-              textDecoration: "none",
-              padding: "0px",
-              margin: "0px 3px",
-              border: "none",
-              outline: "none",
-              backgroundColor: "transparent",
-              fontSize: "14px",
-              cursor: "default",
-            }}
-          >
+          <button style={{ ...style, cursor: "default" }}>
             {points} points by {author} {timeAgo}
           </button>
           |
           <button
-            style={{
-              textDecoration: "underline",
-              padding: "0px",
-              margin: "0px 3px",
-              border: "none",
-              outline: "none",
-              backgroundColor: "transparent",
-              fontSize: "14px",
-            }}
+            style={style}
             onClick={() => {
               handleClickedArticle(objectID);
             }}
