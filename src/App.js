@@ -1,20 +1,23 @@
 import "./App.css";
 import { useState, useEffect } from "react";
-import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
-import Loader from "react-loader-spinner";
+
 import Navbar from "./components/Navbar";
 import NoMatch from "./NoMatch";
 import ErrorMsg from "./ErrorMsg";
 import Article from "./components/Article";
 import PaginationButtons from "./components/PaginationButtons";
+import { ChasingDots } from "better-react-spinkit";
 
 const App = () => {
-  const baseUrl = "https://hn.algolia.com/api/v1/search_by_date";
   const [articles, setArticles] = useState();
   const [query, setQuery] = useState("");
   const [isFetching, setIsFetching] = useState(false);
   const [isError, setIsError] = useState(false);
   const [pageNr, setPageNr] = useState(0);
+  const [detailedView, setDetailedView] = useState();
+  const [isLoadingComments, setIsLoadingComments] = useState(false);
+
+  const baseUrl = "https://hn.algolia.com/api/v1/search_by_date";
 
   useEffect(() => {
     const getNews = () => {
@@ -66,12 +69,27 @@ const App = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // update query state
     setQuery(e.target.query.value);
-
+    //reset page Number
     setPageNr(0);
+
     e.target.query.value = "";
   };
-  console.log(articles);
+
+  const handleClickedArticle = (clickedId) => {
+    //set to true to display the loading spinner
+    setIsLoadingComments(true);
+    //find the article we clicked on and make it the detailed view
+    const clickedArticle = articles.hits.find(
+      (article) => article.objectID === clickedId
+    );
+    setDetailedView(clickedArticle);
+    //remove the loader
+    setIsLoadingComments(false);
+  };
+
+  //function that display the articles and the children components
   const displayArticles = () => {
     if (articles && articles.hits.length > 0) {
       const { hitsPerPage, hits, page } = articles;
@@ -86,18 +104,29 @@ const App = () => {
             >
               {hits
                 .filter((article) =>
+                  //filter the articles if there is a search word
                   query ? article.title.match(new RegExp(query, "gi")) : article
+                )
+                .filter((article) =>
+                  //display articles's detailed view if user clicks on "comments" button
+                  detailedView
+                    ? article.objectID === detailedView.objectID
+                    : article
                 )
                 .map((article) => (
                   <li key={crypto.randomUUID()} className="my-1">
-                    <Article {...article} query={query} />
+                    <Article
+                      {...article}
+                      query={query}
+                      detailedView={detailedView}
+                      handleClickedArticle={handleClickedArticle}
+                      setDetailedView={setDetailedView}
+                      isLoadingComments={isLoadingComments}
+                    />
                   </li>
                 ))}
             </ol>
-            {/* go to previos page */}
-            <PaginationButtons setPageNr={setPageNr} pageNr={pageNr} />
           </div>
-          <footer className="text-center m-5 fs-6">created by claurennt</footer>
         </>
       );
     }
@@ -106,25 +135,27 @@ const App = () => {
   return (
     <>
       <Navbar handleSubmit={handleSubmit} />
+      {/* display no match component if query does not match any article */}
       {query && !articles?.hits?.length > 0 && <NoMatch />}
 
-      {/* if there is a match when searchign for a term display small info about queried word*/}
+      {/* if there is a match when searching for a term display small info about queried word*/}
       {query && articles?.hits?.length > 0 && (
         <p className="fs-4 text-center">Articles matching word: {query}</p>
       )}
       <div className="container container-fluid">
         {isError && <ErrorMsg />}
 
+        {/* display spinner on lfetching articles */}
         {isFetching ? (
-          <Loader
-            visible={isFetching}
-            type="ThreeDots"
-            color="#00BFFF"
-            height={80}
-            width={80}
-          />
+          <ChasingDots size={50} color="#ff6600" />
         ) : (
           displayArticles()
+        )}
+        {/* display spinner when loading comments */}
+        {isLoadingComments && <ChasingDots size={50} color="#ff6600" />}
+        {/* display pagination buttons on general view after fetching is complete */}
+        {!detailedView && !isFetching && (
+          <PaginationButtons pageNr={pageNr} setPageNr={setPageNr} />
         )}
       </div>
     </>
