@@ -30,45 +30,43 @@ const ArticleShortInfo = ({
 
   return (
     <>
-      <div>
-        <div className="d-flex flex-row">
-          <a
-            className="text-decoration-none link-dark fs-5"
-            style={{ cursor: "pointer" }}
-            href={url && url.href}
-            rel="noreferrer"
-            target="_blank"
-            onClick={() => {
-              //show detailed view if article does not have a url
-              if (!url) handleClickedArticle(objectID);
-            }}
-            dangerouslySetInnerHTML={
-              query ? highlightQuery(title) : { __html: title }
-            }
-          ></a>
-          <a
-            href={url && url.origin}
-            target="_blank"
-            rel="noreferrer"
-            className="text-decoration-none link-secondary bg-light fw-light ms-3 p-1"
-          >
-            {url ? url.origin : ""}
-          </a>
-        </div>
-        <div className="d-flex flex-row ">
-          <button style={{ ...style, cursor: "default" }}>
-            {points} points by {author} {timeAgo}
-          </button>
-          |
-          <button
-            style={style}
-            onClick={() => {
-              handleClickedArticle(objectID);
-            }}
-          >
-            {numberOfComments}
-          </button>
-        </div>
+      <div className="d-flex flex-row">
+        <a
+          className="text-decoration-none link-dark fs-5"
+          style={{ cursor: "pointer" }}
+          href={url && url.href}
+          rel="noreferrer"
+          target="_blank"
+          onClick={() => {
+            //show detailed view if article does not have a url
+            if (!url) handleClickedArticle(objectID);
+          }}
+          dangerouslySetInnerHTML={
+            query ? highlightQuery(title) : { __html: title }
+          }
+        ></a>
+        <a
+          href={url && url.origin}
+          target="_blank"
+          rel="noreferrer"
+          className="text-decoration-none link-secondary bg-light fw-light ms-3 p-1"
+        >
+          {url ? url.origin : ""}
+        </a>
+      </div>
+      <div className="d-flex flex-row ">
+        <button style={{ ...style, cursor: "default" }}>
+          {points} points by {author} {timeAgo}
+        </button>
+        |
+        <button
+          style={style}
+          onClick={() => {
+            handleClickedArticle(objectID);
+          }}
+        >
+          {numberOfComments}
+        </button>
       </div>
     </>
   );

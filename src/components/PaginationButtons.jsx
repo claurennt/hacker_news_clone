@@ -1,7 +1,7 @@
 import React from "react";
 
 const PaginationButtons = ({ pageNr, setPageNr }) => (
-  <div className="d-flex justify-content-around pb-4">
+  <div className="d-flex justify-content-around pb-4 mb-5">
     <button
       className="btn btn-outline-info"
       onClick={() => {

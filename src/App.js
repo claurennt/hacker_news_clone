@@ -6,6 +6,7 @@ import NoMatch from "./NoMatch";
 import ErrorMsg from "./ErrorMsg";
 import Article from "./components/Article";
 import PaginationButtons from "./components/PaginationButtons";
+import Footer from "./components/Footer";
 import { ChasingDots } from "better-react-spinkit";
 
 const App = () => {
@@ -15,7 +16,6 @@ const App = () => {
   const [isError, setIsError] = useState(false);
   const [pageNr, setPageNr] = useState(0);
   const [detailedView, setDetailedView] = useState();
-  const [isLoadingComments, setIsLoadingComments] = useState(false);
 
   const baseUrl = "https://hn.algolia.com/api/v1/search_by_date";
 
@@ -67,7 +67,7 @@ const App = () => {
 
     getNews();
     // refresh fetch every 5 minutes
-    const id = setInterval(() => getNews(), 20000);
+    const id = setInterval(() => getNews(), 300000);
 
     // clear the interval when the component is unmounted
     return () => clearInterval(id);
@@ -86,15 +86,11 @@ const App = () => {
   };
 
   const handleClickedArticle = (clickedId) => {
-    //set to true to display the loading spinner
-    setIsLoadingComments(true);
     //find the article we clicked on and make it the detailed view
     const clickedArticle = articles.hits.find(
       (article) => article.objectID === clickedId
     );
     setDetailedView(clickedArticle);
-    //remove the loader
-    setIsLoadingComments(false);
   };
 
   //function that display the articles and the children components
@@ -129,7 +125,6 @@ const App = () => {
                       detailedView={detailedView}
                       handleClickedArticle={handleClickedArticle}
                       setDetailedView={setDetailedView}
-                      isLoadingComments={isLoadingComments}
                     />
                   </li>
                 ))}
@@ -142,7 +137,7 @@ const App = () => {
 
   return (
     <>
-      <Navbar handleSubmit={handleSubmit} />
+      <Navbar handleSubmit={handleSubmit} detailedView={detailedView} />
       {/* display no match component if query does not match any article */}
       {query && !articles?.hits?.length > 0 && <NoMatch />}
 
@@ -159,13 +154,13 @@ const App = () => {
         ) : (
           displayArticles()
         )}
-        {/* display spinner when loading comments */}
-        {isLoadingComments && <ChasingDots size={50} color="#ff6600" />}
+
         {/* display pagination buttons on general view after fetching is complete */}
         {!detailedView && !isFetching && (
           <PaginationButtons pageNr={pageNr} setPageNr={setPageNr} />
         )}
       </div>
+      <Footer />
     </>
   );
 };

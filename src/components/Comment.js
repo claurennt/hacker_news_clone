@@ -21,7 +21,6 @@ const Comment = ({ created_at, author, text, children, nested = 0 }) => {
       {text && (
         <div
           ref={parent}
-          id="parent"
           style={{ fontSize: "0.8rem", paddingLeft: nested * 5 }}
         >
           <div className="d-flex flex-row">

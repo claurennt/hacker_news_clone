@@ -14,7 +14,7 @@ export default function Article({
   detailedView,
   setDetailedView,
   handleClickedArticle,
-  isLoadingComments,
+
   ...rest
 }) {
   const [comments, setComments] = useState();
@@ -22,24 +22,25 @@ export default function Article({
   useEffect(() => {
     //use abort controller interface to cancel the fetch request
     const abortController = new AbortController();
-
-    // Fetch the comments for each article
-    fetch(`http://hn.algolia.com/api/v1/items/${objectID}`, {
-      signal: abortController.signal,
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`Error with status code ${res.status}`);
-        return res.json();
+    const t = () => {
+      // Fetch the comments for each article
+      fetch(`http://hn.algolia.com/api/v1/items/${objectID}`, {
+        signal: abortController.signal,
       })
-      .then(({ children }) => {
-        setComments(children);
-      })
-      .catch((e) => {
-        //return if the error is coming from the abort controller interface
-        if (e.name === "AbortError") return;
-        console.log(e);
-      });
-
+        .then((res) => {
+          if (!res.ok) throw new Error(`Error with status code ${res.status}`);
+          return res.json();
+        })
+        .then(({ children }) => {
+          setComments(children);
+        })
+        .catch((e) => {
+          //return if the error is coming from the abort controller interface
+          if (e.name === "AbortError") return;
+          console.log(e);
+        });
+    };
+    t();
     //cancel the fetch request when the component is unmounted
     return () => abortController.abort();
   }, [objectID]);
@@ -68,12 +69,7 @@ export default function Article({
           {...rest}
         />
       }{" "}
-      {detailedView && (
-        <ArticleDetailed
-          comments={comments}
-          isLoadingComments={isLoadingComments}
-        />
-      )}
+      {detailedView && <ArticleDetailed comments={comments} />}
     </>
   );
 }
