@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { Component } from "react";
 
 import calculateTimeAgo from "../utils/calculateTimeAgo";
 import displayNumberOfComments from "../utils/displayNumberOfComments";
@@ -6,70 +6,82 @@ import displayNumberOfComments from "../utils/displayNumberOfComments";
 import ArticleDetailed from "./ArticleDetailed";
 import ArticleShortInfo from "./ArticleShortInfo";
 
-export default function Article({
-  url,
-  objectID,
-  created_at,
-  num_comments,
-  detailedView,
-  setDetailedView,
-  handleClickedArticle,
+class Article extends Component {
+  constructor(props) {
+    super(props);
+    const { created_at, num_comments } = this.props;
 
-  ...rest
-}) {
-  const [comments, setComments] = useState();
+    this.state = { comments: null };
 
-  useEffect(() => {
-    //use abort controller interface to cancel the fetch request
-    const abortController = new AbortController();
-    const t = () => {
-      // Fetch the comments for each article
-      fetch(`http://hn.algolia.com/api/v1/items/${objectID}`, {
-        signal: abortController.signal,
-      })
-        .then((res) => {
-          if (!res.ok) throw new Error(`Error with status code ${res.status}`);
-          return res.json();
-        })
-        .then(({ children }) => {
-          setComments(children);
-        })
-        .catch((e) => {
-          //return if the error is coming from the abort controller interface
-          if (e.name === "AbortError") return;
-          console.log(e);
-        });
+    this.numberOfComments = displayNumberOfComments(num_comments);
+    this.timeAgo = calculateTimeAgo(created_at);
+
+    this.abortController = new AbortController();
+  }
+
+  componentDidMount() {
+    const getComments = async () => {
+      try {
+        const res = await fetch(
+          `http://hn.algolia.com/api/v1/items/${this.props.objectID}`,
+          {
+            signal: this.abortController.signal,
+          }
+        );
+        const { children } = await res.json();
+
+        this.setState({ comments: children });
+      } catch (e) {
+        if (e.name === "AbortError") return;
+        console.log(e);
+      }
     };
-    t();
-    //cancel the fetch request when the component is unmounted
-    return () => abortController.abort();
-  }, [objectID]);
 
-  // create a url object with the url prop
-  if (url) {
+    getComments();
+  }
+  componentWillUnmount() {
+    this.abortController.abort();
+  }
+
+  if(url) {
     url = new URL(url);
   }
 
-  //get time when article was posted
-  const timeAgo = calculateTimeAgo(created_at);
+  render() {
+    const {
+      url,
+      objectID,
+      created_at,
+      num_comments,
+      detailedView,
+      setDetailedView,
+      handleClickedArticle,
+      story_text,
+      ...rest
+    } = this.props;
 
-  //display string with number of comments
-  const numberOfComments = displayNumberOfComments(num_comments);
-
-  return (
-    <>
-      {
-        <ArticleShortInfo
-          handleClickedArticle={handleClickedArticle}
-          setDetailedView={setDetailedView}
-          timeAgo={timeAgo}
-          url={url}
-          numberOfComments={numberOfComments}
-          objectID={objectID}
-          {...rest}
-        />
-      }{" "}
-      {detailedView && <ArticleDetailed comments={comments} />}
-    </>
-  );
+    return (
+      <>
+        {
+          <ArticleShortInfo
+            handleClickedArticle={handleClickedArticle}
+            setDetailedView={setDetailedView}
+            timeAgo={this.timeAgo}
+            url={url}
+            numberOfComments={this.numberOfComments}
+            objectID={objectID}
+            {...rest}
+          />
+        }
+        {detailedView && (
+          <ArticleDetailed
+            comments={this.state.comments}
+            story_text={story_text}
+          />
+        )}
+      </>
+    );
+  }
 }
+
+export default Article;
