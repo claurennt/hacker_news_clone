@@ -1,3 +1,10 @@
+Ä Hacker News Clone
+The purpose of this repo is to create a clone of the Hacker News Website.
+
+The project has 2 branches:
+- **main**: contains the project with a functional approach
+- **hacker_news/class-based: containes the project with a class-based approach
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
