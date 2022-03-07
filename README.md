@@ -1,4 +1,4 @@
-Ä Hacker News Clone
+# Hacker News Clone
 The purpose of this repo is to create a clone of the Hacker News Website.
 
 The project has 2 branches:
