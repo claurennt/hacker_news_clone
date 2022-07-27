@@ -7,7 +7,7 @@ const Comment = ({ created_at, author, text, children, nested = 0 }) => {
   const timeAgo = calculateTimeAgo(created_at);
 
   const parent = useRef(null);
-
+  //handle navigation to parent comment of current comment
   const navigateToParentComment = () => {
     window.scrollTo({
       behavior: "smooth",

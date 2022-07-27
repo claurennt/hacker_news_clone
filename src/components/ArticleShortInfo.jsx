@@ -19,7 +19,7 @@ const ArticleShortInfo = ({
   handleClickedArticle,
   objectID,
 }) => {
-  // highlight query using regular expression
+  // highlight query word in title using regular expression
   const highlightQuery = (title) => {
     const regexp = new RegExp(query, "gi");
     const replacementPattern = "<mark>$&</mark>";
@@ -38,7 +38,7 @@ const ArticleShortInfo = ({
           rel="noreferrer"
           target="_blank"
           onClick={() => {
-            //show detailed view if article does not have a url
+            //on click show detailed view if article does not have a url
             if (!url) handleClickedArticle(objectID);
           }}
           dangerouslySetInnerHTML={

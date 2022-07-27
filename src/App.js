@@ -15,7 +15,7 @@ const App = () => {
   const [isFetching, setIsFetching] = useState(false);
   const [isError, setIsError] = useState(false);
   const [pageNr, setPageNr] = useState(0);
-  const [detailedView, setDetailedView] = useState();
+  const [clickedArticle, setClickedArticle] = useState();
 
   const baseUrl = "https://hn.algolia.com/api/v1/search_by_date";
 
@@ -32,33 +32,23 @@ const App = () => {
         `${baseUrl}?tags=story&restrictSearchableAttributes=title&numericFilters=num_comments>0&query=${query}&page=${pageNr}`,
         { signal: abortController.signal }
       )
-        .then(
-          (res) => {
-            /*the res.ok property catches all the HTTP error codes outside the range 200..300
-            so it is needed with fetch to catch non-network errors*/
-            if (!res.ok)
-              throw new Error(`Error with status code ${res.status}`);
-            return res.json();
-          },
-          // if we want to catch a network error we pass a second callback to the then chaining
-          (networkError) => {
-            setIsFetching(false);
-            setIsError(true);
-            //we throw a custom error to the catch block
-            throw new Error(`Network Error ${networkError.message}`);
-          }
-        )
+        .then((res) => {
+          /*the res.ok property catches all the HTTP error codes outside the range 200..300
+            so it is needed with fetch() to catch non-network errors*/
+          if (!res.ok) throw new Error(`Error with status code ${res.status}`);
+          return res.json();
+        })
         .then((data) => {
           setIsFetching(false);
           // set the state with new fetched data and articles
           setArticles(data);
         })
         .catch((e) => {
-          console.log(e.name);
-          //return if the error is coming from the abort controller interface
-          if (e.name === "AbortError") return;
           setIsFetching(false);
           setIsError(true);
+          //return if the error is coming from the abort controller interface
+          if (e.name === "AbortError") return;
+
           //catch the error from the callback
           console.log(e);
         });
@@ -87,34 +77,27 @@ const App = () => {
 
   const handleClickedArticle = (clickedId) => {
     //find the article we clicked on and make it the detailed view
-    const clickedArticle = articles.hits.find(
+    const foundArticle = articles.hits.find(
       (article) => article.objectID === clickedId
     );
-    setDetailedView(clickedArticle);
+    setClickedArticle(foundArticle);
   };
 
   //function that display the articles and the children components
   const displayArticles = () => {
-    if (articles && articles.hits.length > 0) {
+    if (articles && articles.hits.length) {
       const { hitsPerPage, hits, page } = articles;
       return (
         <>
           <div className="d-flex flex-column ">
             {/* calculate list numeration */}
-            <ol
-              start={`${
-                page === 0 ? hitsPerPage * page + 1 : hitsPerPage * page
-              }`}
-            >
+            <ol start={`${hitsPerPage * page + 1}`}>
               {hits
                 .filter((article) =>
-                  //filter the articles if there is a search word
-                  query ? article.title.match(new RegExp(query, "gi")) : article
-                )
-                .filter((article) =>
-                  //display detailed view of article that has been clicked on, (click on comment button or article title)
-                  detailedView
-                    ? article.objectID === detailedView.objectID
+                  /*if we click on the comments under an article or on an articles's title that does not have a url then
+                  we filter the article that has the same id as the clickedArticle and return it, else we return all articles */
+                  clickedArticle
+                    ? article.objectID === clickedArticle.objectID
                     : article
                 )
                 .map((article) => (
@@ -122,9 +105,9 @@ const App = () => {
                     <Article
                       {...article}
                       query={query}
-                      detailedView={detailedView}
+                      clickedArticle={clickedArticle}
                       handleClickedArticle={handleClickedArticle}
-                      setDetailedView={setDetailedView}
+                      setClickedArticle={setClickedArticle}
                     />
                   </li>
                 ))}
@@ -137,8 +120,12 @@ const App = () => {
 
   return (
     <>
-      <Navbar handleSubmit={handleSubmit} detailedView={detailedView} />
-      {/* display no match component if query does not match any article */}
+      <Navbar
+        handleSubmit={handleSubmit}
+        clickedArticle={clickedArticle}
+        isError={isError}
+      />
+      {/* display no match component if there is a query but no article matches the given query */}
       {query && !articles?.hits?.length > 0 && <NoMatch />}
 
       {/* if there is a match when searching for a term display small info about queried word*/}
@@ -148,15 +135,15 @@ const App = () => {
       <div className="container container-fluid">
         {isError && <ErrorMsg />}
 
-        {/* display spinner on lfetching articles */}
+        {/* display spinner on fetching articles or articles when fetching is completed */}
         {isFetching ? (
           <ChasingDots size={50} color="#ff6600" />
         ) : (
           displayArticles()
         )}
 
-        {/* display pagination buttons on general view after fetching is complete */}
-        {!detailedView && !isFetching && (
+        {/* display pagination buttons on general view after fetching is complete and when there is no error */}
+        {!clickedArticle && !isFetching && !isError && (
           <PaginationButtons pageNr={pageNr} setPageNr={setPageNr} />
         )}
       </div>

@@ -11,10 +11,9 @@ export default function Article({
   objectID,
   created_at,
   num_comments,
-  detailedView,
-  setDetailedView,
+  clickedArticle,
+  setClickedArticle,
   handleClickedArticle,
-
   ...rest
 }) {
   const [comments, setComments] = useState();
@@ -61,7 +60,7 @@ export default function Article({
       {
         <ArticleShortInfo
           handleClickedArticle={handleClickedArticle}
-          setDetailedView={setDetailedView}
+          setClickedArticle={setClickedArticle}
           timeAgo={timeAgo}
           url={url}
           numberOfComments={numberOfComments}
@@ -69,7 +68,7 @@ export default function Article({
           {...rest}
         />
       }{" "}
-      {detailedView && <ArticleDetailed comments={comments} />}
+      {clickedArticle && <ArticleDetailed comments={comments} />}
     </>
   );
 }
