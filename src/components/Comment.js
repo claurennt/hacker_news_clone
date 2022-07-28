@@ -1,51 +1,105 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import parse from "html-react-parser";
 
 import calculateTimeAgo from "../utils/calculateTimeAgo";
-
-const Comment = ({ created_at, author, text, children, nested = 0 }) => {
+import CommentNavigationButton from "./CommentNavigationButton";
+const Comment = ({ created_at, author, text, children, nested = 0, id }) => {
   const timeAgo = calculateTimeAgo(created_at);
+  const [show, setShow] = useState(true);
 
-  const parent = useRef(null);
-  //handle navigation to parent comment of current comment
+  const localCommentNode = useRef();
+
+  //handle navigation to parent comment
   const navigateToParentComment = () => {
     window.scrollTo({
       behavior: "smooth",
       left: 0,
-      top: parent.current.parentNode.offsetTop,
+      top: localCommentNode?.current.parentNode.offsetTop,
     });
   };
+
+  //handle navigation to previous  comment
+  const navigateToPreviousComment = () => {
+    window.scrollTo({
+      behavior: "smooth",
+      left: 0,
+      top: localCommentNode?.current.previousSibling?.offsetTop,
+    });
+  };
+
+  //handle navigation to next comment
+  const navigateToNextComment = () => {
+    window.scrollTo({
+      behavior: "smooth",
+      left: 0,
+      top: localCommentNode?.current.nextSibling?.offsetTop,
+    });
+  };
+
+  //handle navigation to root comment
+  const navigateToRootComment = () => {
+    //traverse dom to find root comment element of current comment and scroll to it
+    let current = localCommentNode.current;
+    while (current.parentNode.getAttribute("data-id")) {
+      current = current.parentNode;
+    }
+    window.scrollTo({
+      behavior: "smooth",
+      left: 0,
+      top: current.offsetTop,
+    });
+  };
+
+  const showNumberOfNestedComments = children.length
+    ? children.length
+    : children.length + 1;
 
   return (
     <>
       {text && (
         <div
-          ref={parent}
+          ref={localCommentNode}
           style={{ fontSize: "0.8rem", paddingLeft: nested * 5 }}
+          //the id attribute is used as a reference for the scroll
+          data-id={id}
         >
           <div className="d-flex flex-row">
             {" "}
-            <p className="fw- pt-1 ">
+            <p>
               <span style={{ fontSize: "1.2rem" }}>▴</span> {author} {timeAgo}
             </p>{" "}
+            <CommentNavigationButton
+              text="| root |"
+              handleClick={navigateToRootComment}
+            />
+            <CommentNavigationButton
+              text="| parent |"
+              handleClick={navigateToParentComment}
+            />
+            <CommentNavigationButton
+              text="| prev |"
+              handleClick={navigateToPreviousComment}
+            />
+            <CommentNavigationButton
+              text="| next |"
+              handleClick={navigateToNextComment}
+            />
             <button
-              className="fw-light text-decoration-none border-0 bg-transparent"
+              className="fw-light text-decoration-none border-0 bg-transparent p-0 mt-2 ms-2"
               style={{
-                padding: "0px",
-                margin: "0px 3px",
-                marginTop: "10px",
                 fontSize: "0.7rem",
               }}
-              onClick={navigateToParentComment}
+              onClick={() => setShow(!show)}
             >
-              | parent
+              {show ? "[−]" : `[${showNumberOfNestedComments} more]`}
             </button>
           </div>
-          {parse(text)}
+          {show && parse(text)}
           {/* recursively render nested comments and their children with increasing padding left value */}
           {children?.map((commentToComment) => (
             <Comment
               {...commentToComment}
+              parentId={id}
               nested={nested + 4}
               key={crypto.randomUUID()}
             />

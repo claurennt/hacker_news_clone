@@ -1,9 +1,9 @@
 import React from "react";
 
 const ReturnToMain = () => (
-  <div className="text-center p-4">
-    <a href="/">Return to Main</a>
-  </div>
+  <a href="/" className="text-center fs-6 ">
+    Return to Main
+  </a>
 );
 
 export default ReturnToMain;

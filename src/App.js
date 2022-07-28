@@ -119,7 +119,7 @@ const App = () => {
   };
 
   return (
-    <>
+    <div className="App">
       <Navbar
         handleSubmit={handleSubmit}
         clickedArticle={clickedArticle}
@@ -130,7 +130,9 @@ const App = () => {
 
       {/* if there is a match when searching for a term display small info about queried word*/}
       {query && articles?.hits?.length > 0 && (
-        <p className="fs-4 text-center">Articles matching word: {query}</p>
+        <p className="fs-4 text-center">
+          Articles matching word: <span className="fw-bold">{query}</span>
+        </p>
       )}
       <div className="container container-fluid">
         {isError && <ErrorMsg />}
@@ -147,8 +149,8 @@ const App = () => {
           <PaginationButtons pageNr={pageNr} setPageNr={setPageNr} />
         )}
       </div>
-      <Footer />
-    </>
+      {!isFetching && <Footer />}
+    </div>
   );
 };
 
