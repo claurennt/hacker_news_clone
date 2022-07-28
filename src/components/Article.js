@@ -21,25 +21,24 @@ export default function Article({
   useEffect(() => {
     //use abort controller interface to cancel the fetch request
     const abortController = new AbortController();
-    const t = () => {
-      // Fetch the comments for each article
-      fetch(`http://hn.algolia.com/api/v1/items/${objectID}`, {
-        signal: abortController.signal,
+
+    // Fetch the comments for each article
+    fetch(`http://hn.algolia.com/api/v1/items/${objectID}`, {
+      signal: abortController.signal,
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`Error with status code ${res.status}`);
+        return res.json();
       })
-        .then((res) => {
-          if (!res.ok) throw new Error(`Error with status code ${res.status}`);
-          return res.json();
-        })
-        .then(({ children }) => {
-          setComments(children);
-        })
-        .catch((e) => {
-          //return if the error is coming from the abort controller interface
-          if (e.name === "AbortError") return;
-          console.log(e);
-        });
-    };
-    t();
+      .then(({ children }) => {
+        setComments(children);
+      })
+      .catch((e) => {
+        //return if the error is coming from the abort controller interface
+        if (e.name === "AbortError") return;
+        console.log(e.statusCode);
+      });
+
     //cancel the fetch request when the component is unmounted
     return () => abortController.abort();
   }, [objectID]);

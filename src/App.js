@@ -30,7 +30,9 @@ const App = () => {
       // Fetch data from API
       fetch(
         `${baseUrl}?tags=story&restrictSearchableAttributes=title&numericFilters=num_comments>0&query=${query}&page=${pageNr}`,
-        { signal: abortController.signal }
+        {
+          signal: abortController.signal,
+        }
       )
         .then((res) => {
           /*the res.ok property catches all the HTTP error codes outside the range 200..300
@@ -50,7 +52,7 @@ const App = () => {
           if (e.name === "AbortError") return;
 
           //catch the error from the callback
-          console.log(e);
+          console.log(e.message);
         });
       return () => abortController.abort();
     };
