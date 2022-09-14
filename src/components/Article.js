@@ -23,7 +23,7 @@ export default function Article({
     const abortController = new AbortController();
 
     // Fetch the comments for each article
-    fetch(`http://hn.algolia.com/api/v1/items/${objectID}`, {
+    fetch(`https://hn.algolia.com/api/v1/items/${objectID}`, {
       signal: abortController.signal,
     })
       .then((res) => {
